@@ -17,14 +17,17 @@ int main (void) {
   int size;
   struct sockaddr_in address, cliaddress;
 
-  //int create_socket = socket(domain, type, protocol)
-  //create_socket: socket descriptor, an integer (like a file-handle)
-  //domain: integer, communication domain e.g., AF_INET (IPv4 protocol) , AF_INET6 (IPv6 protocol)
-  //type: communication type
-  //SOCK_STREAM: TCP(reliable, connection oriented)
-  //SOCK_DGRAM: UDP(unreliable, connectionless)
-  //protocol: Protocol value for Internet Protocol(IP), which is 0.
-  //This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
+  // int sockfd = socket(domain, type, protocol)
+  // sockfd: socket descriptor, an integer (like a file-handle)
+
+  // domain: integer, communication domain e.g., AF_INET (IPv4 protocol) , AF_INET6 (IPv6 protocol)
+
+  // type: communication type
+  // SOCK_STREAM: TCP(reliable, connection oriented)
+  // SOCK_DGRAM: UDP(unreliable, connectionless)
+
+  // protocol: Protocol value for Internet Protocol(IP), which is 0.
+  // This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
   create_socket = socket (AF_INET, SOCK_STREAM, 0);
 
   memset(&address,0,sizeof(address));
@@ -32,16 +35,27 @@ int main (void) {
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons (PORT);
 
+  // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+  // After creation of the socket, bind function binds the socket to the address and port number specified in addr(custom data structure).
+  // In the example code, we bind the server to the localhost, hence we use INADDR_ANY to specify the IP address.
   if (bind ( create_socket, (struct sockaddr *) &address, sizeof (address)) != 0) {
      perror("bind error");
      return EXIT_FAILURE;
   }
+  // int listen(int sockfd, int backlog);
+  // It puts the server socket in a passive mode, where it waits for the client to approach the server to make a connection.
+  // The backlog, defines the maximum length to which the queue of pending connections for sockfd may grow.
+  // If a connection request arrives when the queue is full, the client may receive an error with an indication of ECONNREFUSED.
   listen (create_socket, 5);
   
   addrlen = sizeof (struct sockaddr_in);
 
   while (1) {
      printf("Waiting for connections...\n");
+     // int new_socket= accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+     // It extracts the first connection request on the queue of pending connections for the listening socket,
+     // sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket.
+     // At this point, connection is established between client and server, and they are ready to transfer data.
      new_socket = accept ( create_socket, (struct sockaddr *) &cliaddress, &addrlen );
      if (new_socket > 0)
      {
