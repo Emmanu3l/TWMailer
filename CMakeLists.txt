@@ -3,4 +3,4 @@ project(TWMailer)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Server myserver.cpp)
+add_executable(myserver myserver.cpp)
