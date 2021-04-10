@@ -1,0 +1,12 @@
+hostname -I
+
+./myserver
+
+telnet hostname 6543
+
+[use localhost] -> telnet localhost 6543
+
+g++ myserver.cpp -o myserver
+
+info:
+https://www.jetbrains.com/help/clion/how-to-use-wsl-development-environment-in-product.html
