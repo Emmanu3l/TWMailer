@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #define BUF 1024
-#define PORT 6543
+//#define PORT 6543
+#define PORT 6544
 
 int main (void) {
   int create_socket, new_socket;
@@ -69,6 +70,23 @@ int main (void) {
         {
            buffer[size] = '\0';
            printf ("Message received: %s\n", buffer);
+           // message received --> do stuff
+           // begin my code
+           //there seems to be a character add the end of the message which I have to remove
+           //A better solution [for comparing string data received from a socket in C],
+           // which does not depend on the received data being null terminated is to use memcmp:
+            if (memcmp(buffer, "ADD", strlen("ADD")) == 0) {
+                printf("ADD COMMAND RECEIVED\n");
+            } else if (memcmp(buffer, "LIST", strlen("LIST")) == 0) {
+                printf("LIST COMMAND RECEIVED\n");
+            } else if (memcmp(buffer, "QUOTE", strlen("QUOTE")) == 0) {
+                printf("QUOTE COMMAND RECEIVED\n");
+            } else if (memcmp(buffer, "LOGOUT", strlen("LOGOUT")) == 0) {
+                printf("LOGOUT COMMAND RECEIVED\n");
+            } else {
+                printf("COULD NOT READ COMMAND\n");
+            }
+           // end my code
         }
         else if (size == 0)
         {
