@@ -29,8 +29,6 @@ int main (void) {
 
   // my own variables
   int fileCounter = 0; // name files starting from 1.txt etc.
-  std::string message; //variable for receiving quotes via message
-  //string message;
 
   // int sockfd = socket(domain, type, protocol)
   // sockfd: socket descriptor, an integer (like a file-handle)
@@ -111,29 +109,17 @@ int main (void) {
                 // starting in the array after the command,
                 // read the contents of the array
                 // as long as the message isn't ".\n":
-                do {
+                while (memcmp(buffer, ".", strlen(".")) != 0) {
                     // Write to the file
                     // recv again
                     //MyFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
                     // Wait for client to send data
                     int bytesReceived = recv(new_socket, buffer, BUF, 0);
-                    if (bytesReceived == -1)
-                    {
-                        std::cerr << "Error in recv(). Quitting" << std::endl;
-                        break;
-                    }
-
-                    if (bytesReceived == 0)
-                    {
-                        std::cout << "Client disconnected " << std::endl;
-                        break;
-                    }
-
-
                     //message = (new_socket->buffer);
-                    MyFile << std::string(buffer, 0, bytesReceived) << std::endl;
+                    if (memcmp(buffer, ".", strlen(".")) != 0) {
+                        MyFile << std::string(buffer, 0, bytesReceived);
+                    }
                 }
-                while (memcmp(buffer, "\n.", strlen("\n.")) != 0);
                 // Close the file
                 MyFile.close();
 
