@@ -16,6 +16,10 @@
 //temporarily change port because I can't bind to the other one right now
 #define PORT 6543
 
+void receiveQuote() { // in order to have concurrency, I should also have function that can be called for each request
+
+}
+
 int main (void) {
   int create_socket, new_socket;
   socklen_t addrlen;
@@ -25,6 +29,7 @@ int main (void) {
 
   // my own variables
   int fileCounter = 0; // name files starting from 1.txt etc.
+  std::string message; //variable for receiving quotes via message
   //string message;
 
   // int sockfd = socket(domain, type, protocol)
@@ -82,7 +87,7 @@ int main (void) {
         if( size > 0)
         {
            buffer[size] = '\0';
-           printf ("Message received: %s\n", buffer);
+           printf ("Message received: %s\n", buffer); // why does the text work fine here but not later? Should I use a different variable for messages?
            // message received --> do stuff
            // begin my code
            // there seems to be a character add the end of the message which I have to remove
@@ -110,9 +115,23 @@ int main (void) {
                     // Write to the file
                     // recv again
                     //MyFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
-                    size = recv (new_socket, buffer, BUF-1, 0);
-                    buffer[size] = '\0';
-                    MyFile << buffer;
+                    // Wait for client to send data
+                    int bytesReceived = recv(new_socket, buffer, BUF, 0);
+                    if (bytesReceived == -1)
+                    {
+                        std::cerr << "Error in recv(). Quitting" << std::endl;
+                        break;
+                    }
+
+                    if (bytesReceived == 0)
+                    {
+                        std::cout << "Client disconnected " << std::endl;
+                        break;
+                    }
+
+
+                    //message = (new_socket->buffer);
+                    MyFile << std::string(buffer, 0, bytesReceived) << std::endl;
                 }
                 while (memcmp(buffer, "\n.", strlen("\n.")) != 0);
                 // Close the file
