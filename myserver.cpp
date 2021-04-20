@@ -143,6 +143,31 @@ int main (void) {
 
             } else if (memcmp(buffer, "QUOTE", strlen("QUOTE")) == 0) {
                 printf("QUOTE COMMAND RECOGNIZED\n");
+                // basically, all I have to do is randomize a number between 1 and the highest one used
+                // i can get the highest number by reading fileCount.txt
+
+                std::string fileContent;
+                int randomNumber;
+                std::string highestFileNumber;
+
+                // Read from the text file
+                std::ifstream numberOfFiles("fileCount.txt");
+                std::getline(numberOfFiles, highestFileNumber);
+                numberOfFiles.close();
+
+
+                randomNumber = (rand() % std::stoi(highestFileNumber)) + 1;
+
+                // Read from the text file
+                std::ifstream createdFile(std::to_string(randomNumber) + ".txt");
+                std::getline(createdFile, fileContent);
+                createdFile.close();
+
+                fileContent.append("\n");
+
+                strcpy(buffer, fileContent.c_str());
+                send(new_socket, buffer, strlen(buffer),0);
+
             } else if (memcmp(buffer, "LOGOUT", strlen("LOGOUT")) == 0) {
                 printf("LOGOUT COMMAND RECOGNIZED\n");
             } else {
