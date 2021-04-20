@@ -170,6 +170,8 @@ int main (void) {
 
             } else if (memcmp(buffer, "LOGOUT", strlen("LOGOUT")) == 0) {
                 printf("LOGOUT COMMAND RECOGNIZED\n");
+                close (create_socket);
+                return EXIT_SUCCESS;
             } else {
                 printf("COULD NOT READ COMMAND\n");
             }
