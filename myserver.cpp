@@ -14,7 +14,7 @@
 #define BUF 1024
 //#define PORT 6543
 //temporarily change port because I can't bind to the other one right now
-#define PORT 6543
+#define PORT 6644
 
 void receiveQuote() { // in order to have concurrency, I should also have function that can be called for each request
 
@@ -28,7 +28,7 @@ int main (void) {
   struct sockaddr_in address, cliaddress;
 
   // my own variables
-  int fileCounter = 0; // name files starting from 1.txt etc.
+  int fileCounter = 1; // name files starting from 1.txt etc.
 
   // int sockfd = socket(domain, type, protocol)
   // sockfd: socket descriptor, an integer (like a file-handle)
@@ -104,7 +104,7 @@ int main (void) {
                 ++fileCounter;
 
                 // Create and open a text file
-                std::ofstream MyFile(filename);
+                std::ofstream createdFile(filename);
 
                 // starting in the array after the command,
                 // read the contents of the array
@@ -112,19 +112,35 @@ int main (void) {
                 while (memcmp(buffer, ".", strlen(".")) != 0) {
                     // Write to the file
                     // recv again
-                    //MyFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
+                    //createdFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
                     // Wait for client to send data
                     int bytesReceived = recv(new_socket, buffer, BUF, 0);
                     //message = (new_socket->buffer);
                     if (memcmp(buffer, ".", strlen(".")) != 0) {
-                        MyFile << std::string(buffer, 0, bytesReceived);
+                        createdFile << std::string(buffer, 0, bytesReceived);
                     }
                 }
                 // Close the file
-                MyFile.close();
+                createdFile.close();
+                // Save file count persistently
+                std::ofstream numberOfFiles("fileCount.txt");
+                numberOfFiles << std::to_string(fileCounter);
+                numberOfFiles.close();
 
-            } else if (memcmp(buffer, "LIST", strlen("LIST")) == 0) {
-                printf("LIST COMMAND RECOGNIZED\n");
+            } else if (memcmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files
+                printf("LIST COMMAND RECOGNIZED\n"); // I don't actually have to count anything: i already counted it, all I have to do is save it persistently
+                // assign value to string
+                //std::string result = "The amount of quotes is " + getLine(std::ifstream numberOfFiles("fileCount.txt")) + "\n";
+                // Create a text string, which is used to output the text file
+                std::string result;
+                // Read from the text file
+                std::ifstream numberOfFiles("fileCount.txt");
+                std::getline(numberOfFiles, result);
+                numberOfFiles.close();
+                result.append(" is the amount of quotes \n");
+                strcpy(buffer, result.c_str());
+                send(new_socket, buffer, strlen(buffer),0);
+
             } else if (memcmp(buffer, "QUOTE", strlen("QUOTE")) == 0) {
                 printf("QUOTE COMMAND RECOGNIZED\n");
             } else if (memcmp(buffer, "LOGOUT", strlen("LOGOUT")) == 0) {
