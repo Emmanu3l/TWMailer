@@ -11,11 +11,16 @@
 // To use the fstream library, include both the standard <iostream> AND the <fstream> header file:
 #include <iostream>
 #include <fstream>
+#include <pthread.h> // in order to make a threaded server
 #define BUF 1024
 //#define PORT 6543
 //temporarily change port because I can't bind to the other one right now
-#define PORT 6644
+#define PORT 6644 //maybe i need to iterate through ports at some point? need to look up where the free ones start and end
 
+// TODO: concurrency
+// TODO: work on error handling e.g. if(Myfile.is_open()){...}
+// TODO: write code to handle possible changes/adjustments to the exercise
+// TODO: test Makefile
 void receiveQuote() { // in order to have concurrency, I should also have function that can be called for each request
 
 }
@@ -24,6 +29,7 @@ int main (void) {
   int create_socket, new_socket;
   socklen_t addrlen;
   char buffer[BUF];
+  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // i guess this is obligatory
   int size;
   struct sockaddr_in address, cliaddress;
 
@@ -63,6 +69,7 @@ int main (void) {
   
   addrlen = sizeof (struct sockaddr_in);
 
+  //an dieser stelle sollte die synchronisation stattfinden
   while (1) {
      printf("Waiting for connections...\n");
      // int new_socket= accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
@@ -171,7 +178,7 @@ int main (void) {
             } else if (memcmp(buffer, "LOGOUT", strlen("LOGOUT")) == 0) {
                 printf("LOGOUT COMMAND RECOGNIZED\n");
                 close (create_socket);
-                return EXIT_SUCCESS;
+                return EXIT_SUCCESS; // or should I put a break here?
             } else {
                 printf("COULD NOT READ COMMAND\n");
             }

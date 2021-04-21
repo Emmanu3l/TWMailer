@@ -1,0 +1,5 @@
+synchronisieren wenn:
+von file lesen,
+in file schreiben
+
+die zahl vom file counter muss auch gesynct werden
