@@ -18,86 +18,23 @@
 #define PORT 6644 //maybe i need to iterate through ports at some point? need to look up where the free ones start and end
 
 // TODO: concurrency
-// TODO: work on error handling e.g. if(Myfile.is_open()){...}
+// TODO: work on error handling e.g. if(Myfile.is_open()){...} oder if (socket creation, bind oder listen == failed == return -1) -> do something. Also wenn die funktionen -1 zurückgeben dann stimmt etwas nicht
 // TODO: write code to handle possible changes/adjustments to the exercise
 // TODO: test Makefile
-void receiveQuote() { // in order to have concurrency, I should also have function that can be called for each request
-
-}
-
-int main (void) {
-  int create_socket, new_socket;
-  socklen_t addrlen;
-  char buffer[BUF];
-  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // i guess this is obligatory
-  int size;
-  struct sockaddr_in address, cliaddress;
-
-  // my own variables
-  int fileCounter = 1; // name files starting from 1.txt etc.
-
-  // int sockfd = socket(domain, type, protocol)
-  // sockfd: socket descriptor, an integer (like a file-handle)
-
-  // domain: integer, communication domain e.g., AF_INET (IPv4 protocol) , AF_INET6 (IPv6 protocol)
-
-  // type: communication type
-  // SOCK_STREAM: TCP(reliable, connection oriented)
-  // SOCK_DGRAM: UDP(unreliable, connectionless)
-
-  // protocol: Protocol value for Internet Protocol(IP), which is 0.
-  // This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
-  create_socket = socket (AF_INET, SOCK_STREAM, 0);
-
-  memset(&address,0,sizeof(address));
-  address.sin_family = AF_INET;
-  address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons (PORT);
-
-  // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-  // After creation of the socket, bind function binds the socket to the address and port number specified in addr(custom data structure).
-  // In the example code, we bind the server to the localhost, hence we use INADDR_ANY to specify the IP address.
-  if (bind ( create_socket, (struct sockaddr *) &address, sizeof (address)) != 0) {
-     perror("bind error");
-     return EXIT_FAILURE;
-  }
-  // int listen(int sockfd, int backlog);
-  // It puts the server socket in a passive mode, where it waits for the client to approach the server to make a connection.
-  // The backlog, defines the maximum length to which the queue of pending connections for sockfd may grow.
-  // If a connection request arrives when the queue is full, the client may receive an error with an indication of ECONNREFUSED.
-  listen (create_socket, 5);
-  
-  addrlen = sizeof (struct sockaddr_in);
-
-  //an dieser stelle sollte die synchronisation stattfinden
-  while (1) {
-     printf("Waiting for connections...\n");
-     // int new_socket= accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-     // It extracts the first connection request on the queue of pending connections for the listening socket,
-     // sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket.
-     // At this point, connection is established between client and server, and they are ready to transfer data.
-     new_socket = accept ( create_socket, (struct sockaddr *) &cliaddress, &addrlen );
-     if (new_socket > 0)
-     {
-        printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
-        // char * strcpy ( char * destination, const char * source );
-        // Copies the C string pointed by source into the array pointed by destination,
-        // including the terminating null character (and stopping at that point).
-        strcpy(buffer,"Welcome to myserver, Please enter your command:\n");
-        send(new_socket, buffer, strlen(buffer),0);
-     }
-     do {
-         // Receive a reply from the server
+// TODO: man soll den server mit einem port und verzeichnis als parameter starten
+int handleRequest(int size, int new_socket, char buffer[BUF], int fileCounter, int create_socket) { // in order to have concurrency, I should also have function that can be called for each request
+    do {
+        // Receive a reply from the server
         size = recv (new_socket, buffer, BUF-1, 0);
         if( size > 0)
         {
-           buffer[size] = '\0';
-           printf ("Message received: %s\n", buffer); // why does the text work fine here but not later? Should I use a different variable for messages?
-           // message received --> do stuff
-           // begin my code
-           // there seems to be a character add the end of the message which I have to remove
-           // A better solution [for comparing string data received from a socket in C],
-           // which does not depend on the received data being null terminated is to use memcmp:
+            buffer[size] = '\0';
+            printf ("Message received: %s\n", buffer); // why does the text work fine here but not later? Should I use a different variable for messages?
+            // message received --> do stuff
+            // begin my code
+            // there seems to be a character add the end of the message which I have to remove
+            // A better solution [for comparing string data received from a socket in C],
+            // which does not depend on the received data being null terminated is to use memcmp:
             if (memcmp(buffer, "ADD", strlen("ADD")) == 0) {
                 printf("ADD COMMAND RECOGNIZED\n");
                 // get contents of buffer after \n
@@ -182,20 +119,89 @@ int main (void) {
             } else {
                 printf("COULD NOT READ COMMAND\n");
             }
-           // end my code
+            // end my code
         }
         else if (size == 0)
         {
-           printf("Client closed remote socket\n");
-           break;
+            printf("Client closed remote socket\n");
+            break;
         }
         else
         {
-           perror("recv error");
-           return EXIT_FAILURE;
+            perror("recv error");
+            return EXIT_FAILURE;
         }
-     } while (strncmp (buffer, "quit", 4)  != 0);
-     close (new_socket);
+    } while (strncmp (buffer, "quit", 4)  != 0);
+    close (new_socket);
+}
+
+int main (void) {
+  int create_socket, new_socket;
+  socklen_t addrlen;
+  char buffer[BUF];
+  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // i guess this is obligatory
+  int size;
+  struct sockaddr_in address, cliaddress;
+
+  // my own variables
+  int fileCounter = 1; // name files starting from 1.txt etc.
+
+  // int sockfd = socket(domain, type, protocol)
+  // sockfd: socket descriptor, an integer (like a file-handle)
+
+  // domain: integer, communication domain e.g., AF_INET (IPv4 protocol) , AF_INET6 (IPv6 protocol)
+
+  // type: communication type
+  // SOCK_STREAM: TCP(reliable, connection oriented) [was in der angabe verlangt wird]
+  // SOCK_DGRAM: UDP(unreliable, connectionless)
+
+  // protocol: Protocol value for Internet Protocol(IP), which is 0.
+  // This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
+  create_socket = socket (AF_INET, SOCK_STREAM, 0);
+
+  memset(&address,0,sizeof(address));
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons (PORT);
+
+  // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+  // After creation of the socket, bind function binds the socket to the address and port number specified in addr(custom data structure).
+  // In the example code, we bind the server to the localhost, hence we use INADDR_ANY to specify the IP address.
+  if (bind ( create_socket, (struct sockaddr *) &address, sizeof (address)) != 0) {
+     perror("bind error");
+     return EXIT_FAILURE;
+  }
+  // int listen(int sockfd, int backlog);
+  // It puts the server socket in a passive mode, where it waits for the client to approach the server to make a connection.
+  // The backlog, defines the maximum length to which the queue of pending connections for sockfd may grow.
+  // If a connection request arrives when the queue is full, the client may receive an error with an indication of ECONNREFUSED.
+  listen (create_socket, 5);
+  
+  addrlen = sizeof (struct sockaddr_in);
+
+  //an dieser stelle sollte die synchronisation stattfinden
+  while (1) {
+     printf("Waiting for connections...\n");
+     // int new_socket= accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+     // It extracts the first connection request on the queue of pending connections for the listening socket,
+     // sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket.
+     // At this point, connection is established between client and server, and they are ready to transfer data.
+     new_socket = accept ( create_socket, (struct sockaddr *) &cliaddress, &addrlen );
+     if (new_socket > 0)
+     {
+        printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
+        // char * strcpy ( char * destination, const char * source );
+        // Copies the C string pointed by source into the array pointed by destination,
+        // including the terminating null character (and stopping at that point).
+        strcpy(buffer,"Welcome to myserver, Please enter your command:\n");
+        send(new_socket, buffer, strlen(buffer),0);
+
+        //after this, a connection has been successfully established
+        //whenever a connection has been established, i should call the handleRequest function
+     }
+
+     return handleRequest(size, new_socket, buffer, fileCounter, create_socket);
+
   }
   close (create_socket);
   return EXIT_SUCCESS;
