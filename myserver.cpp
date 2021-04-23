@@ -13,6 +13,7 @@
 #include <fstream>
 #include <pthread.h> // in order to make a threaded server
 #include <sys/types.h> // in order to use pid_t tid = gettid();
+#include <sys/stat.h> // for checking if the directory exists
 #define BUF 1024
 //#define PORT 6543
 //temporarily change port because I can't bind to the other one right now
@@ -30,6 +31,7 @@
 // TODO: function prototype?
 // TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
 // TODO: fix VM!!
+// TODO: maybe i can move some of these variables back into main if i use a function prototype and move my handleRequest function to the bottom
 
 int create_socket, new_socket;
 socklen_t addrlen;
@@ -40,6 +42,7 @@ struct sockaddr_in address, cliaddress;
 
 // my own variables
 int fileCounter = 1; // name files starting from 1.txt etc.
+const char *path; // for the directory that was passed to the
 
 // int sockfd = socket(domain, type, protocol)
 // sockfd: socket descriptor, an integer (like a file-handle)
@@ -60,7 +63,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
 
     //thread ausgeben start
     pid_t tid = gettid();
-    std::string yourThreadNumber = "Hello! You are using thread number " + std::to_string(tid);
+    std::string yourThreadNumber = "Hello! You are using thread number " + std::to_string(tid) + "\n";
     const char *result = yourThreadNumber.c_str();
     strcpy(buffer, result);
     send(new_socket, buffer, strlen(buffer),0);
@@ -180,7 +183,9 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
     close (new_socket);
 }
 
-int main (void) {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
+int main (int argc, char *argv[]) {
   // protocol: Protocol value for Internet Protocol(IP), which is 0.
   // This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
   create_socket = socket (AF_INET, SOCK_STREAM, 0);
@@ -188,7 +193,7 @@ int main (void) {
   memset(&address,0,sizeof(address));
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons (PORT);
+  address.sin_port = htons (PORT); // The htons() function makes sure that numbers are stored in memory in network byte order, which is with the most significant byte first (aka big-endian). Note that if you were working on a big-endian machine, the htons() function would not need to do any swapping since the number would already be stored in the right way in memory.
 
   // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
   // After creation of the socket, bind function binds the socket to the address and port number specified in addr(custom data structure).
@@ -206,7 +211,7 @@ int main (void) {
   addrlen = sizeof (struct sockaddr_in);
 
   //an dieser stelle sollte die synchronisation stattfinden
-  while (1) {
+  while (true) {
      printf("Waiting for connections...\n");
      // int new_socket= accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
      // It extracts the first connection request on the queue of pending connections for the listening socket,
@@ -224,6 +229,25 @@ int main (void) {
 
         //after this, a connection has been successfully established
         //whenever a connection has been established, i should call the handleRequest function
+
+         // start check whether exists, if not create directory
+         /*if( argc == 2 ) {
+             printf("The argument supplied is %s\n", argv[1]);
+             struct stat st = {0};
+             const char *path = argv[1];
+
+             if (stat(path, &st) == -1) {
+                 mkdir(path, 0777); // Here you should provide 0777, an octal number meaning all of r, w and x
+             }
+         }
+         else if( argc > 2 ) {
+             printf("Too many arguments supplied.\n");
+         }
+         else {
+             printf("One argument expected.\n");
+         }*/
+         // end check whether exists, if not create directory
+
      }
 
      //return handleRequest(size, new_socket, buffer, fileCounter, create_socket);
@@ -237,3 +261,4 @@ int main (void) {
   close (create_socket);
   return EXIT_SUCCESS;
 }
+#pragma clang diagnostic pop // surpress endless loop warning for this function
