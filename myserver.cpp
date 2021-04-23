@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <pthread.h> // in order to make a threaded server
+#include <sys/types.h> // in order to use pid_t tid = gettid();
 #define BUF 1024
 //#define PORT 6543
 //temporarily change port because I can't bind to the other one right now
@@ -24,8 +25,11 @@
 //  oder buffer overflow etc
 // TODO: write code to handle possible changes/adjustments to the exercise
 // TODO: test Makefile
-// TODO: man soll den server mit einem port und verzeichnis als parameter starten
+// TODO: man soll den server mit einem port und verzeichnis als parameter starten. VERZEICHNIS FEHLT!
+// TODO: THREAD AUSGEBEN
 // TODO: function prototype?
+// TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
+// TODO: fix VM!!
 
 int create_socket, new_socket;
 socklen_t addrlen;
@@ -53,6 +57,15 @@ int fileCounter = 1; // name files starting from 1.txt etc.
 void * handleRequest(void* pointer_create_socket) { // in order to have concurrency, I should also have function that can be called for each request
     int create_socket = *((int*)pointer_create_socket);
     free(pointer_create_socket); // not needed any longer
+
+    //thread ausgeben start
+    pid_t tid = gettid();
+    std::string yourThreadNumber = "Hello! You are using thread number " + std::to_string(tid);
+    const char *result = yourThreadNumber.c_str();
+    strcpy(buffer, result);
+    send(new_socket, buffer, strlen(buffer),0);
+    //thread ausgeben end
+
     do {
         // Receive a reply from the server
         size = recv (new_socket, buffer, BUF-1, 0);
