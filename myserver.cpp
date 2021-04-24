@@ -43,7 +43,7 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // obligatory
 int size;
 struct sockaddr_in address, cliaddress;
 // my own variables [should i move these to handleRequest?]
-int fileCounter = 1; // name files starting from 1.txt etc.
+int fileCounter = 0; // name files starting from 0.txt etc. // TODO: should I use 0 or 1 here?
 std::string path; // for the directory that was passed to the server
 
 // int sockfd = socket(domain, type, protocol)
@@ -71,6 +71,8 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
     send(new_socket, buffer, strlen(buffer),0);
     //thread ausgeben end
 
+    path = "./" + path + "/"; //format the relative file path correctly
+
     do {
         // Receive a reply from the server
         size = recv (new_socket, buffer, BUF-1, 0);
@@ -92,10 +94,9 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 // To create a file, use either the ofstream or fstream class, and specify the name of the file.
                 // To write to the file, use the insertion operator (<<).
                 printf("THE PATH IS: %s\n", path.c_str());
-                path = "./" + path + "/";
 
-                std::string filename = std::to_string(fileCounter) + ".txt";
                 ++fileCounter;
+                std::string filename = std::to_string(fileCounter) + ".txt";
 
                 // Create and open a text file
                 std::ofstream createdFile(path + filename);
