@@ -14,35 +14,37 @@
 #include <pthread.h> // in order to make a threaded server
 #include <sys/types.h> // in order to use pid_t tid = gettid();
 #include <sys/stat.h> // for checking if the directory exists
+#include <filesystem> // for creating the directory
 #define BUF 1024
 //#define PORT 6543
 //temporarily change port because I can't bind to the other one right now
-#define PORT 6644 // maybe i need to iterate through ports at some point? need to look up where the free ones start and end
+#define PORT 6655 // maybe i need to iterate through ports at some point? need to look up where the free ones start and end
 #define BACKLOG 5 // number of connections i will accept at once, using 5 because it was specified in the server sample
 
-// TODO: concurrency
-// TODO: work on error handling e.g. if(Myfile.is_open()){...}
+// TODO: work on error handling e.g. if(Myfile.is_open()){...} oder wenn man ein file erstellt
 //  oder if (socket creation, bind oder listen == failed == return -1) -> do something. Also wenn die funktionen -1 zurückgeben dann stimmt etwas nicht
 //  oder buffer overflow etc
 // TODO: write code to handle possible changes/adjustments to the exercise
 // TODO: test Makefile
 // TODO: man soll den server mit einem port und verzeichnis als parameter starten. VERZEICHNIS FEHLT!
-// TODO: THREAD AUSGEBEN
 // TODO: function prototype?
 // TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
 // TODO: fix VM!!
 // TODO: maybe i can move some of these variables back into main if i use a function prototype and move my handleRequest function to the bottom
+// TODO: make sure files with the received messages are saved in the directory that was supplied as a parameter
+// TODO: remove global variables by creating a function prototype and moving handleRequest to the bottom?
+// TODO: switch to filesystem. Am i allowed to use it?
+// TODO: readline()? siehe angabe zur übung
 
 int create_socket, new_socket;
 socklen_t addrlen;
 char buffer[BUF];
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // i guess this is obligatory
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // obligatory
 int size;
 struct sockaddr_in address, cliaddress;
-
-// my own variables
+// my own variables [should i move these to handleRequest?]
 int fileCounter = 1; // name files starting from 1.txt etc.
-const char *path; // for the directory that was passed to the
+std::string path; // for the directory that was passed to the server
 
 // int sockfd = socket(domain, type, protocol)
 // sockfd: socket descriptor, an integer (like a file-handle)
@@ -75,7 +77,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
         if( size > 0)
         {
             buffer[size] = '\0';
-            printf ("Message received: %s\n", buffer); // why does the text work fine here but not later? Should I use a different variable for messages?
+            printf ("Message received: %s\n", buffer);
             // message received --> do stuff
             // begin my code
             // there seems to be a character add the end of the message which I have to remove
@@ -89,12 +91,14 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
 
                 // To create a file, use either the ofstream or fstream class, and specify the name of the file.
                 // To write to the file, use the insertion operator (<<).
+                printf("THE PATH IS: %s\n", path.c_str());
+                path = "./" + path + "/";
 
                 std::string filename = std::to_string(fileCounter) + ".txt";
                 ++fileCounter;
 
                 // Create and open a text file
-                std::ofstream createdFile(filename);
+                std::ofstream createdFile(path + filename);
 
                 // starting in the array after the command,
                 // read the contents of the array
@@ -113,7 +117,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 // Close the file
                 createdFile.close();
                 // Save file count persistently
-                std::ofstream numberOfFiles("fileCount.txt");
+                std::ofstream numberOfFiles(path + "fileCount.txt");
                 numberOfFiles << std::to_string(fileCounter);
                 numberOfFiles.close();
 
@@ -124,7 +128,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 // Create a text string, which is used to output the text file
                 std::string result;
                 // Read from the text file
-                std::ifstream numberOfFiles("fileCount.txt");
+                std::ifstream numberOfFiles(path + "fileCount.txt");
                 std::getline(numberOfFiles, result);
                 numberOfFiles.close();
                 result.append(" is the amount of quotes \n");
@@ -141,7 +145,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 std::string highestFileNumber;
 
                 // Read from the text file
-                std::ifstream numberOfFiles("fileCount.txt");
+                std::ifstream numberOfFiles(path + "fileCount.txt");
                 std::getline(numberOfFiles, highestFileNumber);
                 numberOfFiles.close();
 
@@ -149,7 +153,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 randomNumber = (rand() % std::stoi(highestFileNumber)) + 1;
 
                 // Read from the text file
-                std::ifstream createdFile(std::to_string(randomNumber) + ".txt");
+                std::ifstream createdFile(path + std::to_string(randomNumber) + ".txt");
                 std::getline(createdFile, fileContent);
                 createdFile.close();
 
@@ -181,10 +185,11 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
         }
     } while (strncmp (buffer, "quit", 4)  != 0);
     close (new_socket);
+    return nullptr;
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
+#pragma clang diagnostic push // surpress endless loop warning for this function
+#pragma ide diagnostic ignored "EndlessLoop" // surpress endless loop warning for this function
 int main (int argc, char *argv[]) {
   // protocol: Protocol value for Internet Protocol(IP), which is 0.
   // This is the same number which appears on protocol field in the IP header of a packet.(man protocols for more details)
@@ -217,7 +222,7 @@ int main (int argc, char *argv[]) {
      // It extracts the first connection request on the queue of pending connections for the listening socket,
      // sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket.
      // At this point, connection is established between client and server, and they are ready to transfer data.
-     new_socket = accept ( create_socket, (struct sockaddr *) &cliaddress, &addrlen );
+     new_socket = accept ( create_socket, (struct sockaddr *) &cliaddress, &addrlen ); // accept() liefert einen neuen Socket Deskriptor new_sd für die weitere Kommunikation mit dem Client
      if (new_socket > 0)
      {
         printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
@@ -231,21 +236,35 @@ int main (int argc, char *argv[]) {
         //whenever a connection has been established, i should call the handleRequest function
 
          // start check whether exists, if not create directory
-         /*if( argc == 2 ) {
+         if( argc == 2 ) {
              printf("The argument supplied is %s\n", argv[1]);
-             struct stat st = {0};
-             const char *path = argv[1];
+             /* struct stat st = {0}; [this would be the way to do it in c]
+             const std::string path = std::string(argv[1]);
 
-             if (stat(path, &st) == -1) {
-                 mkdir(path, 0777); // Here you should provide 0777, an octal number meaning all of r, w and x
+             if (stat(path.c_str(), &st) == -1) {
+                 mkdir(path.c_str(), 0777); // Here you should provide 0777, an octal number meaning all of r, w and x
+             } */
+
+             // c++ way of creating a directory
+             path = std::string(argv[1]);
+             try {
+                 if(std::filesystem::create_directory(path)) {
+                     std::cout << "Created a directory\n";
+                 }
+                 else {
+                     std::cerr << "Failed to create a directory\n";
+                 }
+             } catch (const std::exception& e){
+                 std::cerr << e.what() << '\n';
              }
+
          }
          else if( argc > 2 ) {
              printf("Too many arguments supplied.\n");
          }
          else {
              printf("One argument expected.\n");
-         }*/
+         }
          // end check whether exists, if not create directory
 
      }
@@ -258,7 +277,7 @@ int main (int argc, char *argv[]) {
      pthread_create(&myThread, NULL, handleRequest, pointer_create_socket); // pass in thread address, thread function (handleRequest), and a thread argument that needs to be a pointer
      //the function passed as the thread callback must be a (void*)(*)(void*) type function
   }
-  close (create_socket);
+  close (create_socket); // schließt den socket, danach weder senden noch empfangen möglich. Der Socket Deskriptor von create_socket wird auch wieder freigegeben.
   return EXIT_SUCCESS;
 }
 #pragma clang diagnostic pop // surpress endless loop warning for this function
