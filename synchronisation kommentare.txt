@@ -3,3 +3,17 @@ von file lesen,
 in file schreiben
 
 die zahl vom file counter muss auch gesynct werden
+
+
+> Schreibende und lesende Teile müssen
+kritische Sektionen sichern
+> Zugriff auf gemeinsame Daten darf nur
+nach Überprüfung einer
+„Freigabebedingung“ erfolgen
+Informatik - Grundlagen der Programmierung 2
+21
+„Freigabebedingung“ erfolgen
+> Sicherer Informationsaustausch zwischen
+Threads muss gewährleistet sein
+> Einsatz von „Mutexes“ ("mutually exclusive") und „Condition
+Variables“

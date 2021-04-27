@@ -4,9 +4,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib> // update from deprecated header
+#include <cstdio> // update from deprecated header
+#include <cstring> // update from deprecated header
 // The fstream library allows us to work with files.
 // To use the fstream library, include both the standard <iostream> AND the <fstream> header file:
 #include <iostream>
@@ -25,21 +25,21 @@
 //  oder if (socket creation, bind oder listen == failed == return -1) -> do something. Also wenn die funktionen -1 zurückgeben dann stimmt etwas nicht
 //  oder buffer overflow etc
 // TODO: write code to handle possible changes/adjustments to the exercise
-// TODO: test Makefile
-// TODO: man soll den server mit einem port und verzeichnis als parameter starten. VERZEICHNIS FEHLT!
 // TODO: function prototype?
 // TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
-// TODO: fix VM!!
 // TODO: maybe i can move some of these variables back into main if i use a function prototype and move my handleRequest function to the bottom
 // TODO: make sure files with the received messages are saved in the directory that was supplied as a parameter
 // TODO: remove global variables by creating a function prototype and moving handleRequest to the bottom?
-// TODO: switch to filesystem. Am i allowed to use it?
 // TODO: readline()? siehe angabe zur übung
+// TODO: most importantly, check for errors (e.g. send() function returns -1 [if (send(sd, string, len, 0) == -1) { /* error */ })
+// TODO: second most importantly, implement synchronisation
+// TODO: nachfragen ob ich das mit den threads anders machen sollte
 
+// TODO: check for alternatives to so many global variables. function prototype may help. look at examples: https://www.youtube.com/watch?v=Pg_4Jz8ZIH4 https://gist.github.com/codehoose/020c6213f481aee76ea9b096acaddfaf
 int create_socket, new_socket;
 socklen_t addrlen;
 char buffer[BUF];
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // obligatory
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // zur verwaltung von mutexes
 int size;
 struct sockaddr_in address, cliaddress;
 // my own variables [should i move these to handleRequest?]
@@ -122,7 +122,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 numberOfFiles << std::to_string(fileCounter);
                 numberOfFiles.close();
 
-            } else if (memcmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files
+            } else if (memcmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files //TODO: also print all files
                 printf("LIST COMMAND RECOGNIZED\n"); // I don't actually have to count anything: i already counted it, all I have to do is save it persistently
                 // assign value to string
                 //std::string result = "The amount of quotes is " + getLine(std::ifstream numberOfFiles("fileCount.txt")) + "\n";
@@ -167,7 +167,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
                 printf("LOGOUT COMMAND RECOGNIZED\n");
                 //close (create_socket); TODO
                 //return EXIT_SUCCESS; // or should I put a break here?
-                return NULL; //replace return values with NULL to appease the compiler, since now our function is supposed to return a pointer
+                return nullptr; //replace return values with NULL to appease the compiler, since now our function is supposed to return a pointer [replace with nullptr instead of NULL because of clang-tidy]
             } else {
                 printf("COULD NOT READ COMMAND\n");
             }
@@ -182,7 +182,7 @@ void * handleRequest(void* pointer_create_socket) { // in order to have concurre
         {
             perror("recv error");
             //return EXIT_FAILURE; TODO
-            return NULL; //replace return values with NULL to appease the compiler, since now our function is supposed to return a pointer
+            return nullptr; //replace return values with NULL to appease the compiler, since now our function is supposed to return a pointer [replace with nullptr instead of NULL because of clang-tidy]
         }
     } while (strncmp (buffer, "quit", 4)  != 0);
     close (new_socket);
@@ -275,7 +275,7 @@ int main (int argc, char *argv[]) {
      //int *pointer_client = (int*)malloc(sizeof(int)); // less elegant, old fashioned c-esque way to do it
      int *pointer_create_socket = new int[sizeof(int)]; // the pointer shouldn't be interfered with by any other thread, therefore i allocate some space on the heap for an int
      *pointer_create_socket = create_socket; // store the value of the client socket
-     pthread_create(&myThread, NULL, handleRequest, pointer_create_socket); // pass in thread address, thread function (handleRequest), and a thread argument that needs to be a pointer
+     pthread_create(&myThread, nullptr, handleRequest, pointer_create_socket); // pass in thread address, thread function (handleRequest), and a thread argument that needs to be a pointer [replace with nullptr instead of NULL because of clang-tidy]
      //the function passed as the thread callback must be a (void*)(*)(void*) type function
   }
   close (create_socket); // schließt den socket, danach weder senden noch empfangen möglich. Der Socket Deskriptor von create_socket wird auch wieder freigegeben.
