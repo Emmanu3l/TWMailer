@@ -17,3 +17,28 @@ Informatik - Grundlagen der Programmierung 2
 Threads muss gewährleistet sein
 > Einsatz von „Mutexes“ ("mutually exclusive") und „Condition
 Variables“
+
+
+explanation:
+1.what is a mutex
+nothing more than a flag which can be set or unset (locked or unlocked)
+
+2. what problem does it solve:
+the unpredictable behavior in race conditions (the condition of an electronics, software, or other system where the system's substantive behavior is dependent on the sequence or timing of other uncontrollable events. It becomes a bug when one or more of the possible behaviors is undesirable)
+that result from multiple threads' access to a shared resource.
+particularly if each thread needs to modify that resource.
+When a thread locks a mutex and another thread attempts to lock that same mutex, that thread will block until
+the current thread that acquired the lock finishes and unlocks the mutex.
+This ensures that no more than one thread at a time is accessing a resource.
+
+3. what are deadlocks and how to solve them:
+will occur when the thread that acquired the lock attempts to lock the mutex again.
+Avoid by paying close attention to when you're locking and unlocking mutexes to ensure a program can never
+be in a situation to lock the same mutex it already locked.
+
+some more info:
+pthread_t create thread(s)
+pthread_create: start a thread
+pthread_join: wait for multiple threads to finish
+pthread_mutex_t: create a mutex
+PTHREAD_MUTEX_INTIALIZER: a macro which will initialize the mutex
