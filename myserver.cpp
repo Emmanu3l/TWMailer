@@ -26,7 +26,6 @@
 //  oder if (socket creation, bind oder listen == failed == return -1) -> do something. Also wenn die funktionen -1 zurückgeben dann stimmt etwas nicht
 //  oder buffer overflow etc
 // TODO: write code to handle possible changes/adjustments to the exercise
-// TODO: function prototype?
 // TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
 // TODO: maybe i can move some of these variables back into main if i use a function prototype and move my handleRequest function to the bottom
 // TODO: make sure files with the received messages are saved in the directory that was supplied as a parameter
@@ -34,8 +33,6 @@
 // TODO: readline()? siehe angabe zur übung
 // TODO: most importantly, check for errors (e.g. send() function returns -1 [if (send(sd, string, len, 0) == -1) { /* error */ })
 // TODO: second most importantly, implement synchronisation
-// TODO: nachfragen ob ich das mit den threads anders machen sollte
-// TODO: readline()!!!
 
 // int sockfd = socket(domain, type, protocol)
 // sockfd: socket descriptor, an integer (like a file-handle)
@@ -76,8 +73,7 @@ int main(int argc, char *argv[]) {
 	memset(&address, 0, sizeof(address));
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(
-			PORT); // The htons() function makes sure that numbers are stored in memory in network byte order, which is with the most significant byte first (aka big-endian). Note that if you were working on a big-endian machine, the htons() function would not need to do any swapping since the number would already be stored in the right way in memory.
+	address.sin_port = htons(PORT); // The htons() function makes sure that numbers are stored in memory in network byte order, which is with the most significant byte first (aka big-endian). Note that if you were working on a big-endian machine, the htons() function would not need to do any swapping since the number would already be stored in the right way in memory.
 
 	// int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 	// After creation of the socket, bind function binds the socket to the address and port number specified in addr(custom data structure).
@@ -220,17 +216,14 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				// To write to the file, use the insertion operator (<<).
 				printf("THE PATH IS: %s\n", path.c_str());
 
+				// *** acquire lock
+				pthread_mutex_lock(&mutex);
+
 				++fileCounter;
 				std::string filename = std::to_string(fileCounter) + ".txt";
 
-				// acquire lock
-				pthread_mutex_lock(&mutex);
-
 				// Create and open a text file
 				std::ofstream createdFile(path + filename);
-
-				// release lock
-				pthread_mutex_unlock(&mutex);
 
 				// starting in the array after the command,
 				// read the contents of the array
@@ -248,10 +241,14 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				}
 				// Close the file
 				createdFile.close();
+
 				// Save file count persistently
 				std::ofstream numberOfFiles(path + "fileCount.txt");
 				numberOfFiles << std::to_string(fileCounter);
 				numberOfFiles.close();
+
+				// *** release lock
+				pthread_mutex_unlock(&mutex);
 
 			} else if (strncmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files //TODO: also print all files
 				printf("LIST COMMAND RECOGNIZED\n"); // I don't actually have to count anything: i already counted it, all I have to do is save it persistently
