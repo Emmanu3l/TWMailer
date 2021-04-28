@@ -228,19 +228,29 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				// starting in the array after the command,
 				// read the contents of the array
 				// as long as the message isn't ".\n":
-				while (strncmp(buffer, ".", strlen(".")) != 0) {
-					// Write to the file
-					// recv again
-					// createdFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
-					// Wait for client to send data
-					int bytesReceived = recv(new_socket, buffer, BUF, 0);
-					// message = (new_socket->buffer);
-					if (strncmp(buffer, ".", strlen(".")) != 0) {
-						createdFile << std::string(buffer, 0, bytesReceived);
+
+				//"Der Server antwortet mit OK\n oder ERR\n im Fehlerfall und speichert die neue Quote im Verzeichnis ab."
+				try {
+					while (strncmp(buffer, ".", strlen(".")) != 0) {
+						// Write to the file
+						// recv again
+						// createdFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
+						// Wait for client to send data
+						int bytesReceived = recv(new_socket, buffer, BUF, 0);
+						// message = (new_socket->buffer);
+						if (strncmp(buffer, ".", strlen(".")) != 0) {
+							createdFile << std::string(buffer, 0, bytesReceived);
+						}
 					}
+					// Close the file
+					createdFile.close();
+
+					strcpy(buffer, "OK\n");
+					send(new_socket, buffer, strlen(buffer), 0);
+				} catch (const std::exception &e) {
+					strcpy(buffer, "ERR\n");
+					send(new_socket, buffer, strlen(buffer), 0);
 				}
-				// Close the file
-				createdFile.close();
 
 				// Save file count persistently
 				std::ofstream numberOfFiles(path + "fileCount.txt");
