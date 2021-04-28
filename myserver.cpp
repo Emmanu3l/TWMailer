@@ -209,7 +209,8 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 			// there seems to be a character add the end of the message which I have to remove
 			// A better solution [for comparing string data received from a socket in C],
 			// which does not depend on the received data being null terminated is to use memcmp:
-			if (memcmp(buffer, "ADD", strlen("ADD")) == 0) {
+			// edited: actually, why not use strncmp?
+			if (strncmp(buffer, "ADD", strlen("ADD")) == 0) {
 				printf("ADD COMMAND RECOGNIZED\n");
 				// get contents of buffer after \n
 				// add every line after that into the file, including the new line
@@ -234,14 +235,14 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				// starting in the array after the command,
 				// read the contents of the array
 				// as long as the message isn't ".\n":
-				while (memcmp(buffer, ".", strlen(".")) != 0) {
+				while (strncmp(buffer, ".", strlen(".")) != 0) {
 					// Write to the file
 					// recv again
 					// createdFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
 					// Wait for client to send data
 					int bytesReceived = recv(new_socket, buffer, BUF, 0);
 					// message = (new_socket->buffer);
-					if (memcmp(buffer, ".", strlen(".")) != 0) {
+					if (strncmp(buffer, ".", strlen(".")) != 0) {
 						createdFile << std::string(buffer, 0, bytesReceived);
 					}
 				}
@@ -252,7 +253,7 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				numberOfFiles << std::to_string(fileCounter);
 				numberOfFiles.close();
 
-			} else if (memcmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files //TODO: also print all files
+			} else if (strncmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files //TODO: also print all files
 				printf("LIST COMMAND RECOGNIZED\n"); // I don't actually have to count anything: i already counted it, all I have to do is save it persistently
 				// assign value to string
 				//std::string result = "The amount of quotes is " + getLine(std::ifstream numberOfFiles("fileCount.txt")) + "\n";
@@ -266,7 +267,7 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				strcpy(buffer, result.c_str());
 				send(new_socket, buffer, strlen(buffer), 0);
 
-			} else if (memcmp(buffer, "QUOTE", strlen("QUOTE")) == 0) {
+			} else if (strncmp(buffer, "QUOTE", strlen("QUOTE")) == 0) {
 				printf("QUOTE COMMAND RECOGNIZED\n");
 				// basically, all I have to do is randomize a number between 1 and the highest one used
 				// i can get the highest number by reading fileCount.txt
