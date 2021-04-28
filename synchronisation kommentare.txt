@@ -42,3 +42,15 @@ pthread_create: start a thread
 pthread_join: wait for multiple threads to finish
 pthread_mutex_t: create a mutex
 PTHREAD_MUTEX_INTIALIZER: a macro which will initialize the mutex
+
+
+
+IN CONCLUSION:
+the part where you NEED to have synchronization is when WRITING to a file
+
+Between the lock and unlock is the critical section of the code. This is code that should only be accessed by
+one thread at any given moment.
+
+Mutex should be locked only for the minimum amount of time. Because while the mutex is locked, any other thread that
+hits this line will block until you've unlocked it. As soon as you unlock it the most recent thread that locked it will
+then continue and execute the code.

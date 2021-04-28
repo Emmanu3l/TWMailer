@@ -19,3 +19,9 @@ User attributes can also be stored in LDAP, which determines what that user is a
 LDAP is based on a client-server interaction. The client begins a session with the server, called a “binding”.
 The client presents their user credentials which the server can compare against the directory and authorize access based on that user’s attributes.
 
+
+ldap used for:
+resource information lookup (employees, printers, computers)
+more reads from ldap client to the ldap server (database) than writes
+example:
+storying employee username and password in ldap directory server and authenticating against it. (username and password won't change often, therefore write operations are rare)
