@@ -51,9 +51,8 @@
 void *handleRequest(void *pointer_create_socket);
 
 typedef struct _handleRequestArgs { // for passing arguments to thread
-	int create_socket, new_socket;
+	int new_socket;
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-	struct sockaddr_in cliaddress;
 	std::string path;
 } handleRequestArgs;
 
@@ -154,10 +153,8 @@ int main(int argc, char *argv[]) {
 		handleRequestArgs *hRArgs = new handleRequestArgs();
 
 		//Prepare thread arguments
-		hRArgs->create_socket = create_socket;
 		hRArgs->new_socket = new_socket;
 		hRArgs->mutex = mutex;
-		hRArgs->cliaddress = cliaddress;
 		hRArgs->path = path;
 
 		//return handleRequest(size, new_socket, buffer, fileCounter, create_socket);
@@ -183,13 +180,10 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 
 	handleRequestArgs *handleRequestArgs;
 	handleRequestArgs = (struct _handleRequestArgs *) args;
-	//handleRequestArgs->
 
 	//restore thread args
-	int create_socket = handleRequestArgs->create_socket;
 	int new_socket = handleRequestArgs->new_socket;
 	pthread_mutex_t mutex = handleRequestArgs->mutex;
-	struct sockaddr_in cliaddress = handleRequestArgs->cliaddress;
 	std::string path = handleRequestArgs->path;
 
 
