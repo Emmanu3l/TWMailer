@@ -37,8 +37,6 @@
 // TODO: nachfragen ob ich das mit den threads anders machen sollte
 // TODO: readline()!!!
 
-// TODO: check for alternatives to so many global variables. function prototype may help. look at examples: https://www.youtube.com/watch?v=Pg_4Jz8ZIH4 https://gist.github.com/codehoose/020c6213f481aee76ea9b096acaddfaf
-
 // int sockfd = socket(domain, type, protocol)
 // sockfd: socket descriptor, an integer (like a file-handle)
 
@@ -103,8 +101,7 @@ int main(int argc, char *argv[]) {
 		// It extracts the first connection request on the queue of pending connections for the listening socket,
 		// sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket.
 		// At this point, connection is established between client and server, and they are ready to transfer data.
-		new_socket = accept(create_socket, (struct sockaddr *) &cliaddress,
-							&addrlen); // accept() liefert einen neuen Socket Deskriptor new_sd für die weitere Kommunikation mit dem Client
+		new_socket = accept(create_socket, (struct sockaddr *) &cliaddress, &addrlen); // accept() liefert einen neuen Socket Deskriptor new_sd für die weitere Kommunikation mit dem Client
 		if (new_socket > 0) {
 			printf("Client connected from %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
 			// char * strcpy ( char * destination, const char * source );
@@ -296,11 +293,6 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				strcpy(buffer, fileContent.c_str());
 				send(new_socket, buffer, strlen(buffer), 0);
 
-			} else if (memcmp(buffer, "LOGOUT", strlen("LOGOUT")) == 0) {
-				printf("LOGOUT COMMAND RECOGNIZED\n");
-				//close (create_socket); TODO
-				//return EXIT_SUCCESS; // or should I put a break here?
-				return nullptr; //replace return values with NULL to appease the compiler, since now our function is supposed to return a pointer [replace with nullptr instead of NULL because of clang-tidy]
 			} else {
 				printf("COULD NOT READ COMMAND\n");
 			}
@@ -313,7 +305,7 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 			//return EXIT_FAILURE; TODO
 			return nullptr; //replace return values with NULL to appease the compiler, since now our function is supposed to return a pointer [replace with nullptr instead of NULL because of clang-tidy]
 		}
-	} while (strncmp(buffer, "quit", 4) != 0);
+	} while (strncmp(buffer, "LOGOUT", strlen("LOGOUT")) != 0);
 	close(new_socket);
 	return nullptr;
 }
