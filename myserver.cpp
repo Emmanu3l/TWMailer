@@ -19,19 +19,8 @@
 #define BUF 1024
 //#define PORT 6543
 //temporarily change port because I can't bind to the other one right now
-#define PORT 6677 // maybe i need to iterate through ports at some point? need to look up where the free ones start and end
+#define PORT 6666 // maybe i need to iterate through ports at some point? need to look up where the free ones start and end
 #define BACKLOG 5 // number of connections i will accept at once, using 5 because it was specified in the server sample
-
-//TODO: der neue User überschreibt den alten User
-//TODO: LIST ist global
-
-// TODO: work on error handling e.g. if(Myfile.is_open()){...} oder wenn man ein file erstellt
-//  oder if (socket creation, bind oder listen == failed == return -1) -> do something. Also wenn die funktionen -1 zurückgeben dann stimmt etwas nicht
-//  oder buffer overflow etc
-// TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
-// TODO: remove global variables by creating a function prototype and moving handleRequest to the bottom?
-// TODO: readline()? siehe angabe zur übung
-// TODO: most importantly, check for errors (e.g. send() function returns -1 [if (send(sd, string, len, 0) == -1) { /* error */ })
 
 // int sockfd = socket(domain, type, protocol)
 // sockfd: socket descriptor, an integer (like a file-handle)
@@ -199,20 +188,10 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 		if (size > 0) {
 			buffer[size] = '\0';
 			printf("Message received: %s\n", buffer);
-			// message received --> do stuff
-			// begin my code
-			// there seems to be a character add the end of the message which I have to remove
-			// A better solution [for comparing string data received from a socket in C],
-			// which does not depend on the received data being null terminated is to use memcmp:
-			// edited: actually, why not use strncmp?
+			//TODO: use user (first word) as file name and location as file content
 			if (strncmp(buffer, "CHECKIN", strlen("CHECKIN")) == 0) {
 				printf("CHECKIN COMMAND RECOGNIZED\n");
-				// get contents of buffer after \n
-				// add every line after that into the file, including the new line
-				// stop listening after ".\n" and save the file
 
-				// To create a file, use either the ofstream or fstream class, and specify the name of the file.
-				// To write to the file, use the insertion operator (<<).
 				printf("THE PATH IS: %s\n", path.c_str());
 
 				// *** acquire lock
@@ -291,10 +270,29 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 
 			} else if (strncmp(buffer, "CHECKOUT", strlen("CHECKOUT")) == 0) {
 				printf("CHECKOUT COMMAND RECOGNIZED\n");
-				// basically, all I have to do is randomize a number between 1 and the highest one used
-				// i can get the highest number by reading fileCount.txt
 
-				std::string fileContent;
+				std::string request;
+
+				try {
+					while (strncmp(buffer, ".", strlen(".")) != 0) {
+						// Write to the file
+						// recv again
+						// createdFile << recv (new_socket, buffer, BUF-1, 0); //something goes wrong here, the wrong characters are put in the file
+						// Wait for client to send data
+						int bytesReceived = recv(new_socket, buffer, BUF, 0);
+						// message = (new_socket->buffer);
+						if (strncmp(buffer, ".", strlen(".")) != 0) {
+							request.append(std::string(buffer, 0, bytesReceived));
+						}
+					}
+					strcpy(buffer, "OK\n");
+					send(new_socket, buffer, strlen(buffer), 0);
+				} catch (const std::exception &e) {
+					strcpy(buffer, "ERR\n");
+					send(new_socket, buffer, strlen(buffer), 0);
+				}
+
+				/*std::string fileContent;
 				int randomNumber;
 				std::string highestFileNumber;
 
@@ -314,7 +312,34 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				fileContent.append("\n");
 
 				strcpy(buffer, fileContent.c_str());
-				send(new_socket, buffer, strlen(buffer), 0);
+				send(new_socket, buffer, strlen(buffer), 0);*/
+
+				std::string userAmount;
+				std::ifstream numberOfFiles(path + "fileCount.txt");
+				std::getline(numberOfFiles, userAmount);
+
+				//CHECK ALL FILES IN DIRECTORY and delete appropriate file
+				int fileIterator = std::stoi(userAmount);
+				std::string fileContent;
+				for (int i = 0; i < fileIterator + 1; ++i) {
+					std::ifstream createdFile(path + std::to_string(i) + ".txt");
+					std::getline(createdFile, fileContent);
+					createdFile.close();
+					fileContent.append("\n");
+					strcpy(buffer, fileContent.c_str());
+					send(new_socket, buffer, strlen(buffer), 0);
+
+					pthread_mutex_lock(&mutex); //added
+					if (createdFile.good()) {
+						std::string readLine;
+						getline(createdFile, readLine);
+						if (strncmp(request.c_str(), readLine.c_str(), strlen(readLine.c_str())) == 0) { //rearranged parameters
+							std::filesystem::remove(path + std::to_string(i) + ".txt");
+						}
+					}
+					pthread_mutex_unlock(&mutex); //added
+				}
+				return nullptr; //added
 
 			} else {
 				printf("COULD NOT READ COMMAND\n");
