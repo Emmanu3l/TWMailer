@@ -4,25 +4,25 @@ For example your C:\ drive will be present at /mnt/c/ for you to use.
 
 call server like this:
 
-./myserver.o directoryName
+`./myserver.o directoryName`
 
 
 and telnet like this:
 
-telnet localhost portNumber
+`telnet localhost portNumber`
 
 
 in conclusion:
 
 in one terminal:
 
-cd /mnt/c/wsl_twmailer/
+`cd /mnt/c/wsl_twmailer/`
 
-make
+`make`
 
 
 in the other terminal:
 
-./myserver.o directoryName
+`./myserver.o directoryName`
 
-telnet localhost 6655
+`telnet localhost 6655`
