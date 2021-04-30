@@ -1,4 +1,5 @@
 WSL stores your Windows drives in the /mnt folder, with the name of the drive as a subfolder.
+
 For example your C:\ drive will be present at /mnt/c/ for you to use.
 
 
