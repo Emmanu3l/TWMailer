@@ -2,7 +2,6 @@
 /shelf/
 /workspace.xml
 # Datasource local storage ignored files
-/../../../../../../:\Users\Emmi3\CLionProjects\TWMailer\.idea/dataSources/
-/dataSources.local.xml
+/dataSources/
 # Editor-based HTTP Client requests
 /httpRequests/
