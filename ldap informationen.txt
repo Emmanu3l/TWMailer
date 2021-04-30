@@ -1,0 +1,27 @@
+For many years, LDAP has been the dominant protocol for secure user authentication for on-premise directories.
+Organizations have used LDAP to store and retrieve data from directory services and is a critical part of the blueprint for Active Directory (AD),
+the most widely used directory service. Historically, LDAP provided an efficient level of security for organizations to deploy WPA2-Enterprise.
+
+Lightweight Directory Access Protocol, or LDAP, is a software protocol that stores and arranges data to make it easily searchable.
+The data can be any information about organizations, devices, or users stored in directories.
+LDAP is the protocol used by servers to speak with on-premise directories.
+
+Data is stored in a hierarchical structure called a Directory Information Tree (DIT),
+which organizes data into a branching “tree” structure, making it easier for admins to navigate their directories,
+find specific data, and administer user access policies.
+
+The main purpose of LDAP is to serve as a central hub for authentication and authorization.
+LDAP helps organizations store user credentials (username/password) and then access them later,
+like when a user is attempting to access an LDAP-enabled application. That user’s credentials stored in LDAP authenticate the user.
+
+User attributes can also be stored in LDAP, which determines what that user is allowed to access based on policies set by the directory.
+
+LDAP is based on a client-server interaction. The client begins a session with the server, called a “binding”.
+The client presents their user credentials which the server can compare against the directory and authorize access based on that user’s attributes.
+
+
+ldap used for:
+resource information lookup (employees, printers, computers)
+more reads from ldap client to the ldap server (database) than writes
+example:
+storying employee username and password in ldap directory server and authenticating against it. (username and password won't change often, therefore write operations are rare)
