@@ -13,7 +13,7 @@ For example your C:\ drive will be present at /mnt/c/ for you to use.
 `telnet localhost portNumber`
 
 
-# In conclusion:
+## In conclusion:
 
 * In one terminal:
 
