@@ -12,16 +12,16 @@ and telnet like this:
 `telnet localhost portNumber`
 
 
-in conclusion:
+# In conclusion:
 
-in one terminal:
+* in one terminal:
 
 `cd /mnt/c/wsl_twmailer/`
 
 `make`
 
 
-in the other terminal:
+* in the other terminal:
 
 `./myserver.o directoryName`
 
