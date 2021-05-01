@@ -22,18 +22,6 @@
 #define PORT 6655 // maybe i need to iterate through ports at some point? need to look up where the free ones start and end
 #define BACKLOG 5 // number of connections i will accept at once, using 5 because it was specified in the server sample
 
-// TODO: work on error handling e.g. if(Myfile.is_open()){...} oder wenn man ein file erstellt
-//  oder if (socket creation, bind oder listen == failed == return -1) -> do something. Also wenn die funktionen -1 zurückgeben dann stimmt etwas nicht
-//  oder buffer overflow etc
-// TODO: write code to handle possible changes/adjustments to the exercise
-// TODO: have the server sending back responses in more situations, this will also help in checking whether the concurrency works correctly
-// TODO: maybe i can move some of these variables back into main if i use a function prototype and move my handleRequest function to the bottom
-// TODO: make sure files with the received messages are saved in the directory that was supplied as a parameter
-// TODO: remove global variables by creating a function prototype and moving handleRequest to the bottom?
-// TODO: readline()? siehe angabe zur übung
-// TODO: most importantly, check for errors (e.g. send() function returns -1 [if (send(sd, string, len, 0) == -1) { /* error */ })
-// TODO: second most importantly, implement synchronisation
-
 // int sockfd = socket(domain, type, protocol)
 // sockfd: socket descriptor, an integer (like a file-handle)
 
@@ -63,7 +51,7 @@ int main(int argc, char *argv[]) {
 	int size;
 	struct sockaddr_in address, cliaddress;
 	// my own variables [should i move these to handleRequest?]
-	int fileCounter = 0; // name files starting from 0.txt etc. // TODO: try to read value from file to avoid restarting from 1.txt and overwriting files
+	int fileCounter = 0; // name files starting from 0.txt etc.
 	std::string path; // for the directory that was passed to the server
 
 	// protocol: Protocol value for Internet Protocol(IP), which is 0.
@@ -140,7 +128,6 @@ int main(int argc, char *argv[]) {
 
 		}
 
-		//TODO: pass variables to thread
 		//You can only pass a single argument to the function that you are calling in the new thread. Create a struct to hold the values and send the address of the struct.
 		//prepare arguments for thread
 		handleRequestArgs *hRArgs = new handleRequestArgs();
@@ -260,7 +247,7 @@ void *handleRequest(/*void* pointer_create_socket*/ void *args) { // in order to
 				// *** release lock
 				pthread_mutex_unlock(&mutex);
 
-			} else if (strncmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files //TODO: also print all files
+			} else if (strncmp(buffer, "LIST", strlen("LIST")) == 0) { // print the number of quotes/files
 				printf("LIST COMMAND RECOGNIZED\n"); // I don't actually have to count anything: i already counted it, all I have to do is save it persistently
 				// assign value to string
 				//std::string result = "The amount of quotes is " + getLine(std::ifstream numberOfFiles("fileCount.txt")) + "\n";
